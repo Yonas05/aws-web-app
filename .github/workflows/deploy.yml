@@ -43,7 +43,7 @@ jobs:
 
       # Update ECS service
       - name: Update ECS Service
-        uses: aws-actions/amazon-ecs-update-task-definition@v1
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           cluster: my-app                # your ECS cluster name
           service: my-app-service        # your ECS service name
