@@ -4,7 +4,6 @@ This repository demonstrates deploying a scalable web application on AWS using *
 
 ## 📦 Project Structure
 
-
 ## 🔄 Deployment Workflow
 
 ### Option 1: EC2 + Ansible
@@ -32,3 +31,4 @@ This repository demonstrates deploying a scalable web application on AWS using *
 - [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 - [Ansible Documentation](https://docs.ansible.com/)
 - [AWS ECS Documentation](https://docs.aws.amazon.com/ecs/latest/userguide/what-is-ecs.html)
+# aws-web-app
