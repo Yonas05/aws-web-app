@@ -10,10 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout repo
-      - uses: actions/checkout@v3
+      # 1️⃣ Checkout repository
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      # 2️⃣ Configure AWS credentials
+      # 2️⃣ Configure AWS credentials (IAM user or role)
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -21,32 +22,36 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-   
-      # 4️⃣ Build Docker image (path points to app folder)
+      # 3️⃣ Build Docker image
       - name: Build Docker image
-        run: docker build -t my-app ./aws-web-app/app
+        run: |
+          docker build -t my-app ./aws-web-app/app
 
-      # 5️⃣ Login to AWS ECR
-      - name: Login to AWS ECR
+      # 4️⃣ Login to Amazon ECR
+      - name: Login to Amazon ECR
         run: |
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
-          | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+          | docker login \
+              --username AWS \
+              --password-stdin \
+              ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
-      # 6️⃣ Tag Docker image
+      # 5️⃣ Tag Docker image
       - name: Tag Docker image
         run: |
-          docker tag my-app:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
+          docker tag my-app:latest \
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
 
-      # 7️⃣ Push Docker image
+      # 6️⃣ Push Docker image to ECR
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
+          docker push \
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
 
-      # 8️⃣ Update ECS service
-      - name: Update ECS Service
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          cluster: my-app                 # ECS cluster name from Terraform
-          service: my-app-service         # ECS service name from Terraform
-          task-definition: my-app-task    # ECS task family from Terraform
-          image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
+      # 7️⃣ Force ECS service to deploy new image
+      - name: Deploy new image to ECS
+        run: |
+          aws ecs update-service \
+            --cluster my-app \
+            --service my-app-service \
+            --force-new-deployment
