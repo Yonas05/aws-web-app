@@ -6,38 +6,46 @@ terraform {
     }
   }
 
-required_providers {
-  aws = {
-    source  = "hashicorp/aws"
-    version = "~> 4.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.0"
+    }
   }
-}
 }
 
 provider "aws" {
   region = "us-east-1"
 }
 
-# 1. Create VPC
+# -------------------------
+# 1️⃣ VPC
+# -------------------------
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
   tags = { Name = "my-vpc" }
 }
 
-# 2. Create Public Subnet
+# -------------------------
+# 2️⃣ Public Subnet
+# -------------------------
 resource "aws_subnet" "public" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.1.0/24"
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
-  availability_zone = "us-east-1a"
+  availability_zone       = "us-east-1a"
 }
 
-# 3. Internet Gateway
+# -------------------------
+# 3️⃣ Internet Gateway
+# -------------------------
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 }
 
-# 4. Route Table
+# -------------------------
+# 4️⃣ Route Table
+# -------------------------
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
   route {
@@ -46,13 +54,14 @@ resource "aws_route_table" "public" {
   }
 }
 
-# Associate route table
 resource "aws_route_table_association" "public_assoc" {
   subnet_id      = aws_subnet.public.id
   route_table_id = aws_route_table.public.id
 }
 
-# 5. Security Group
+# -------------------------
+# 5️⃣ Security Group
+# -------------------------
 resource "aws_security_group" "web_sg" {
   name        = "web-sg"
   description = "Allow HTTP"
@@ -73,12 +82,23 @@ resource "aws_security_group" "web_sg" {
   }
 }
 
-# 6. ECS Cluster
+# -------------------------
+# 6️⃣ ECR Repository
+# -------------------------
+resource "aws_ecr_repository" "my_app" {
+  name = "my-app"  # lowercase only
+}
+
+# -------------------------
+# 7️⃣ ECS Cluster
+# -------------------------
 resource "aws_ecs_cluster" "my_cluster" {
   name = "my-cluster"
 }
 
-# 7. ECS Task Definition
+# -------------------------
+# 8️⃣ ECS Task Definition
+# -------------------------
 resource "aws_ecs_task_definition" "my_task" {
   family                   = "my-task"
   network_mode             = "awsvpc"
@@ -101,7 +121,9 @@ resource "aws_ecs_task_definition" "my_task" {
   ])
 }
 
-# 8. ECS Fargate Service
+# -------------------------
+# 9️⃣ ECS Fargate Service
+# -------------------------
 resource "aws_ecs_service" "my_service" {
   name            = "my-service"
   cluster         = aws_ecs_cluster.my_cluster.id
@@ -110,10 +132,8 @@ resource "aws_ecs_service" "my_service" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets         = [aws_subnet.public.id]
-    security_groups = [aws_security_group.web_sg.id]
+    subnets          = [aws_subnet.public.id]
+    security_groups  = [aws_security_group.web_sg.id]
     assign_public_ip = true
   }
 }
-
-
