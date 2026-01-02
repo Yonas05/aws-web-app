@@ -6,6 +6,6 @@ COPY . /usr/share/nginx/html
 
 # Expose port 80 so AWS can serve the site
 EXPOSE 80
-
+#dockerfile is used to build a docker image for a web application using Nginx as the web server.
 # Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
