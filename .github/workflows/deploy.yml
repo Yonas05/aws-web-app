@@ -21,13 +21,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # 3️⃣ Terraform init & apply (if you want Terraform in workflow)
-      - name: Terraform Init
-        run: terraform init -chdir=aws-web-app/terraform
-
-      - name: Terraform Apply
-        run: terraform apply -auto-approve -chdir=aws-web-app/terraform
-
+   
       # 4️⃣ Build Docker image (path points to app folder)
       - name: Build Docker image
         run: docker build -t my-app ./aws-web-app/app
